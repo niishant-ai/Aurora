@@ -52,7 +52,7 @@ gh auth login
 
 ```powershell
 git remote add origin https://github.com/<owner>/<repo>.git
-git push -u origin main
+git push -u origin master
 ```
 
 The commit is already made and the tree is clean; `node_modules`, `.next`, `.env.local`, and `.zwork` are gitignored, so no secret can be pushed by accident. If you prefer a token, a fine-grained PAT with **Contents: Read and write** on that one repo is enough.
