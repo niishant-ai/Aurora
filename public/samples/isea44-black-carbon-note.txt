@@ -1,0 +1,9 @@
+ISEA-44 Bharati intake note, 2025
+
+Clear-sky aerosol optical depth at Bharati on 16 February 2025 was 0.037 at 500 nm.
+
+Black carbon stayed below 20 ng m-3 except for a two-hour rise to 44 ng m-3 during a northerly wind.
+
+The intake editor should pair this note with the January AOD report before any public line is written.
+
+Tags suggested by the filename: Bharati, aerosol, black carbon.
