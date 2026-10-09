@@ -13,20 +13,23 @@ Create a project at <https://supabase.com/dashboard>, then open **Connect** and 
 | Variable | Which string | Port |
 | --- | --- | --- |
 | `DATABASE_URL` | **Transaction pooler** | 6543 |
-| `DIRECT_DATABASE_URL` | **Direct connection** | 5432 |
+| `DIRECT_DATABASE_URL` | **Session pooler** (same host) | 5432 |
 
 `DATABASE_URL` must use the pooler because Vercel Functions open many short-lived connections. `DIRECT_DATABASE_URL` is used only by `drizzle-kit`, because DDL does not survive a transaction pooler.
+
+> **Do not use the `db.<PROJECT-REF>.supabase.co` host from the "Direct connection" panel for migrations.** On free plans that host is IPv6-only, so on an IPv4-only network it fails with `getaddrinfo ENOTFOUND`. The session pooler on port 5432 is the IPv4-reachable equivalent and supports DDL. Both hosts are shown on the same **Connect** panel.
 
 From `Connect → Transaction pooler`:
 
 ```text
-postgresql://postgres.<PROJECT-REF>:<PASSWORD>@aws-<N>-<REGION>.pooler.supabase.com:6543/postgres?sslmode=require
+postgresql://postgres.<PROJECT-REF>:<PASSWORD>@aws-<N>-<REGION>.pooler.supabase.com:6543/postgres?uselibpqcompat=true&sslmode=require
 ```
 
-Three details that cause the most failed first deploys:
+Four details that cause the most failed first deploys:
 
 - The pooled username is `postgres.<PROJECT-REF>`, **not** bare `postgres`.
-- Keep `sslmode=require`. node-postgres defaults to **no** SSL, so without it the connection is plaintext.
+- The `aws-<N>` index in the host is not guessable. If you pick the wrong one you get `tenant/user postgres.<ref> not found`; if the host is wrong entirely you get `ENOTFOUND`. Copy it from the dashboard.
+- Keep **both** `uselibpqcompat=true` and `sslmode=require`. node-postgres defaults to **no** SSL, and on pg 8.20 a bare `sslmode=require` is treated as `verify-full`, which fails against Supabase's chain with `self-signed certificate in certificate chain` — especially behind a TLS-inspecting proxy. `uselibpqcompat=true` restores libpq semantics: encrypt, do not verify.
 - Do **not** append `pgbouncer=true` or `connection_limit=1`. Those are Prisma flags; node-postgres ignores both. Pool size is set in `src/db/index.ts`.
 
 Then create the tables and seed:
@@ -78,10 +81,10 @@ If you would rather not use the CLI, import the repo at <https://vercel.com/new>
 ## 4. Verify
 
 ```powershell
-curl https://<your-app>.vercel.app/api/health
+curl https://aurora-gray-three.vercel.app/api/health
 ```
 
-Expect a JSON payload with a successful database ping. Then load `/` and check the archive renders.
+Expected: `{"ok":true}`. Then load `/` and check the archive renders. `/api/catalog` returning 13 expeditions and 72 assets confirms the database is reachable and the archive seeded itself.
 
 ---
 

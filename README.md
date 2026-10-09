@@ -17,7 +17,11 @@ Open the app and use the role switcher in the header. The default role is **Edit
 
 The database URL is read from `DATABASE_URL`. Next.js loads `.env.local`, so that is the file to create locally; `.env.example` documents both variables. `src/db/index.ts` throws at boot if `DATABASE_URL` is missing.
 
-Use the Supabase **transaction pooler** (port 6543) for `DATABASE_URL`, and the **direct** connection (port 5432) for `DIRECT_DATABASE_URL`, which `drizzle-kit push` uses. Rationale and the exact parameters are in `.env.example`.
+Use the Supabase **transaction pooler** (port 6543) for `DATABASE_URL`, and the **session** pooler (port 5432, same host) for `DIRECT_DATABASE_URL`, which `drizzle-kit push` uses. Both need `uselibpqcompat=true&sslmode=require` — without the first flag, pg 8.20 treats `sslmode=require` as `verify-full` and fails against Supabase's certificate chain. Do **not** use the `db.<PROJECT-REF>.supabase.co` host for migrations; it is IPv6-only on free plans. Rationale and exact parameters are in `.env.example`.
+
+## Live deployment
+
+<https://aurora-gray-three.vercel.app> — deployed on Vercel, database on Supabase (Postgres 17, `ap-northeast-2`). See `DEPLOY.md` for the deploy and migration procedure.
 
 The archive seeds itself on the first request. Mock field reports are labeled as such. Photographs and clips are illustrative stock, not station photography.
 
